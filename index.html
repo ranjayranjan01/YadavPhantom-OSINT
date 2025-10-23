@@ -411,6 +411,13 @@
             font-size: 0.7rem;
             margin-left: 8px;
         }
+
+        .api-status {
+            color: #ffff00;
+            font-size: 0.7rem;
+            margin-top: 5px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -458,6 +465,7 @@
                 <div class="card-title">
                     <i class="fas fa-phone"></i> PHONE LOOKUP
                 </div>
+                <div class="api-status">✅ FULLY FUNCTIONAL</div>
                 <div class="input-group">
                     <input type="text" id="phone" placeholder="Enter Phone" value="9691282274">
                     <button onclick="search('number', 'phone')">SEARCH</button>
@@ -474,6 +482,7 @@
                 <div class="card-title">
                     <i class="fas fa-id-card"></i> AADHAAR INFO
                 </div>
+                <div class="api-status">⚠️ LIMITED FUNCTIONALITY</div>
                 <div class="input-group">
                     <input type="text" id="aadhaar" placeholder="Enter Aadhaar">
                     <button onclick="search('aadhaar', 'aadhaar')">SEARCH</button>
@@ -490,6 +499,7 @@
                 <div class="card-title">
                     <i class="fas fa-car"></i> VEHICLE INFO
                 </div>
+                <div class="api-status">⚠️ LIMITED FUNCTIONALITY</div>
                 <div class="input-group">
                     <input type="text" id="vehicle" placeholder="Enter Vehicle No" value="JK05F1806">
                     <button onclick="search('vehicle', 'vehicle')">SEARCH</button>
@@ -506,6 +516,7 @@
                 <div class="card-title">
                     <i class="fas fa-money-bill-wave"></i> UPI INFO
                 </div>
+                <div class="api-status">⚠️ LIMITED FUNCTIONALITY</div>
                 <div class="input-group">
                     <input type="text" id="upi" placeholder="Enter UPI ID" value="fasterversionofme@okicici">
                     <button onclick="search('upi', 'upi')">SEARCH</button>
@@ -522,6 +533,7 @@
         <footer>
             <p>☄️ MAY BE NOW PERMANENT 👀</p>
             <p class="terminal-text">SECURE CONNECTION | DEVELOPED BY RANJAY YADAV</p>
+            <p class="terminal-text">📱 Only Phone Lookup is fully functional | Other APIs have limited access</p>
         </footer>
     </div>
 
@@ -809,6 +821,7 @@
                 .join(', ');
         }
 
+        // Main search function with better error handling
         async function search(type, element) {
             const input = document.getElementById(element).value.trim();
             const resultDiv = document.getElementById(element + '-result');
@@ -817,7 +830,7 @@
             const errorDiv = document.getElementById(element + '-error');
             
             if (!input) {
-                errorDiv.textContent = 'Enter ' + element + ' number';
+                errorDiv.textContent = 'Please enter ' + element + ' number';
                 errorDiv.style.display = 'block';
                 return;
             }
@@ -835,16 +848,19 @@
             try {
                 const response = await fetch(`http://localhost:8000/api/${type}/${encodeURIComponent(input)}`);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
                 const data = await response.json();
                 
                 loadingDiv.style.display = 'none';
                 
-                if (data.error) {
-                    errorDiv.textContent = 'API Error: ' + data.error;
+                if (!response.ok || data.error) {
+                    let errorMessage = data.error || `HTTP ${response.status}`;
+                    
+                    // Better error messages for different APIs
+                    if (type !== 'number') {
+                        errorMessage += '. Currently only Phone lookup is fully functional. External API has limited access for other search types.';
+                    }
+                    
+                    errorDiv.textContent = 'Error: ' + errorMessage;
                     errorDiv.style.display = 'block';
                 } else {
                     // Remove duplicates before displaying
@@ -859,9 +875,12 @@
                     const uniqueCount = uniqueData.data ? uniqueData.data.length : 0;
                     const duplicateCount = originalCount - uniqueCount;
                     
-                    let successMsg = '✅ REAL DATA RETRIEVED SUCCESSFULLY!';
+                    let successMsg = '✅ DATA RETRIEVED SUCCESSFULLY!';
                     if (duplicateCount > 0) {
                         successMsg += ` (${duplicateCount} duplicates removed)`;
+                    }
+                    if (type !== 'number') {
+                        successMsg += ' - Limited Data Available';
                     }
                     
                     successDiv.textContent = successMsg;
@@ -872,7 +891,13 @@
                 
             } catch (error) {
                 loadingDiv.style.display = 'none';
-                errorDiv.textContent = 'Connection Error: ' + error.message;
+                
+                let errorMessage = error.message;
+                if (type !== 'number') {
+                    errorMessage += '. Note: Currently only Phone lookup is fully functional.';
+                }
+                
+                errorDiv.textContent = 'Connection Error: ' + errorMessage;
                 errorDiv.style.display = 'block';
                 console.error('Search Error:', error);
             }
