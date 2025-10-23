@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YadavPhantom OSINT Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Developer: Ranjay Yadav - YadavPhantom */
+        :root {
+            --primary-color: #00ff41;
+            --secondary-color: #008f11;
+            --background-color: #0a0a0a;
+            --surface-color: #111111;
+            --text-color: #e0e0e0;
+            --error-color: #ff3333;
+            --success-color: #00ff00;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.3;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+            padding: 8px;
+        }
+        
+        /* Matrix Background */
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.02;
+            pointer-events: none;
+        }
+        
+        /* Scanning Line */
+        .scan-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--primary-color), transparent);
+            animation: scan 3s linear infinite;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        @keyframes scan {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 5px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            border-bottom: 2px solid var(--primary-color);
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+        }
+        
+        .glitch {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            position: relative;
+            text-shadow: 0.05em 0 0 rgba(255, 0, 0, 0.75),
+                         -0.025em -0.05em 0 rgba(0, 255, 0, 0.75),
+                         0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
+            animation: glitch 500ms infinite;
+            margin-bottom: 5px;
+        }
+        
+        @keyframes glitch {
+            0% { text-shadow: 0.05em 0 0 rgba(255,0,0,0.75), -0.05em -0.025em 0 rgba(0,255,0,0.75), -0.025em 0.05em 0 rgba(0,0,255,0.75); }
+            14% { text-shadow: 0.05em 0 0 rgba(255,0,0,0.75), -0.05em -0.025em 0 rgba(0,255,0,0.75), -0.025em 0.05em 0 rgba(0,0,255,0.75); }
+            15% { text-shadow: -0.05em -0.025em 0 rgba(255,0,0,0.75), 0.025em 0.025em 0 rgba(0,255,0,0.75), -0.05em -0.05em 0 rgba(0,0,255,0.75); }
+            49% { text-shadow: -0.05em -0.025em 0 rgba(255,0,0,0.75), 0.025em 0.025em 0 rgba(0,255,0,0.75), -0.05em -0.05em 0 rgba(0,0,255,0.75); }
+            50% { text-shadow: 0.025em 0.05em 0 rgba(255,0,0,0.75), 0.05em 0 0 rgba(0,255,0,0.75), 0 -0.05em 0 rgba(0,0,255,0.75); }
+            99% { text-shadow: 0.025em 0.05em 0 rgba(255,0,0,0.75), 0.05em 0 0 rgba(0,255,0,0.75), 0 -0.05em 0 rgba(0,0,255,0.75); }
+            100% { text-shadow: -0.025em 0 0 rgba(255,0,0,0.75), -0.025em -0.025em 0 rgba(0,255,0,0.75), -0.025em -0.05em 0 rgba(0,0,255,0.75); }
+        }
+        
+        .subtitle {
+            color: var(--secondary-color);
+            margin-top: 5px;
+            font-size: 0.9rem;
+            text-shadow: 0 0 8px var(--secondary-color);
+            font-weight: bold;
+        }
+        
+        .developer {
+            color: var(--primary-color);
+            font-size: 0.8rem;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 6px var(--primary-color);
+        }
+        
+        /* Premium Status Bar */
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+        }
+        
+        .status-item {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--primary-color);
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+        
+        .status-label {
+            color: #ffff00;
+            font-size: 0.7rem;
+            margin-bottom: 3px;
+            text-shadow: 0 0 6px #ffff00;
+            font-weight: bold;
+        }
+        
+        .status-value {
+            color: #00ff00;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-shadow: 0 0 8px #00ff00;
+        }
+        
+        /* Search Grid */
+        .search-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .card {
+            background: rgba(17, 17, 17, 0.95);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 255, 65, 0.4);
+        }
+        
+        .card-title {
+            color: var(--primary-color);
+            font-size: 1rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            text-shadow: 0 0 6px var(--primary-color);
+        }
+        
+        .card-title i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .input-group {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(0, 255, 65, 0.5);
+            border-radius: 5px 0 0 5px;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+        }
+        
+        button {
+            background: linear-gradient(145deg, #00ff41, #008f11);
+            color: #000;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .result-container {
+            margin-top: 10px;
+        }
+        
+        .result {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 6px;
+            border: 1px solid var(--primary-color);
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 8px 0;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+        
+        .loading:after {
+            content: '...';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { color: rgba(0,0,0,0); text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); }
+            40% { color: var(--primary-color); text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); }
+            60% { text-shadow: .25em 0 0 var(--primary-color), .5em 0 0 rgba(0,0,0,0); }
+            80%, 100% { text-shadow: .25em 0 0 var(--primary-color), .5em 0 0 var(--primary-color); }
+        }
+        
+        .error {
+            color: #ff4444;
+            margin-top: 8px;
+            display: none;
+            padding: 8px;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid #ff4444;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .success {
+            color: #00ff88;
+            margin-top: 8px;
+            display: none;
+            padding: 8px;
+            background: rgba(0, 255, 0, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid #00ff88;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-shadow: 0 0 6px #00ff88;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            border-top: 1px solid rgba(0, 255, 65, 0.3);
+            color: #ffff00;
+            font-size: 0.8rem;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 8px;
+        }
+        
+        /* Beautiful Data Format Styles - Mobile Optimized */
+        .data-record {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .data-field {
+            margin: 5px 0;
+            padding: 4px 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .field-label {
+            color: #00ff41;
+            font-weight: bold;
+            font-size: 0.75rem;
+            margin-bottom: 2px;
+        }
+        
+        .field-value {
+            color: #ffffff;
+            font-size: 0.8rem;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .record-number {
+            color: #00ff41;
+            font-weight: bold;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #00ff41;
+            font-size: 0.9rem;
+        }
+        
+        .no-data {
+            color: #ff6666;
+            text-align: center;
+            padding: 15px;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        
+        /* Scrollbar Styling */
+        .result::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .result::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 3px;
+        }
+        
+        .result::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+        
+        /* Terminal Effect */
+        .terminal-text {
+            color: #ffff00;
+            text-shadow: 0 0 5px #ffff00;
+        }
+        
+        /* Stats Section */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+        }
+        
+        .stat-item {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--secondary-color);
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            color: var(--primary-color);
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            color: var(--secondary-color);
+            font-size: 0.7rem;
+            margin-top: 3px;
+        }
+
+        /* Email and long text specific styling */
+        .email-field {
+            word-break: break-all;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+
+        .address-field {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            line-height: 1.2;
+        }
+        
+        /* Exact match highlighting */
+        .exact-match {
+            border: 2px solid #00ff41 !important;
+            background: rgba(0, 255, 65, 0.1) !important;
+        }
+        
+        .exact-match-badge {
+            color: #ffff00;
+            font-size: 0.7rem;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-line"></div>
+    <canvas class="matrix-bg" id="matrix"></canvas>
+    
+    <div class="container">
+        <header>
+            <h1 class="glitch">🔍 YadavPhantom</h1>
+            <p class="subtitle">ACCESSING RESTRICTED DATABASES...</p>
+            <p class="developer">Developed by Ranjay Yadav</p>
+        </header>
+
+        <!-- Premium Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-label">🌐 API STATUS</div>
+                <div class="status-value">ONLINE</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">🔗 CONNECTION</div>
+                <div class="status-value">SECURE</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">⚡ MODE</div>
+                <div class="status-value">PRO HACKER</div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <div class="stat-item">
+                <div class="stat-value" id="total-searches">0</div>
+                <div class="stat-label">Total Searches</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="successful-searches">0</div>
+                <div class="stat-label">Successful</div>
+            </div>
+        </div>
+
+        <!-- Search Grid -->
+        <div class="search-grid">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-phone"></i> PHONE LOOKUP
+                </div>
+                <div class="input-group">
+                    <input type="text" id="phone" placeholder="Enter Phone" value="9691282274">
+                    <button onclick="search('number', 'phone')">SEARCH</button>
+                </div>
+                <div class="loading" id="phone-loading">🔄 Searching...</div>
+                <div class="success" id="phone-success"></div>
+                <div class="error" id="phone-error"></div>
+                <div class="result-container">
+                    <div class="result" id="phone-result"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-id-card"></i> AADHAAR INFO
+                </div>
+                <div class="input-group">
+                    <input type="text" id="aadhaar" placeholder="Enter Aadhaar">
+                    <button onclick="search('aadhaar', 'aadhaar')">SEARCH</button>
+                </div>
+                <div class="loading" id="aadhaar-loading">🔄 Searching...</div>
+                <div class="success" id="aadhaar-success"></div>
+                <div class="error" id="aadhaar-error"></div>
+                <div class="result-container">
+                    <div class="result" id="aadhaar-result"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-car"></i> VEHICLE INFO
+                </div>
+                <div class="input-group">
+                    <input type="text" id="vehicle" placeholder="Enter Vehicle No" value="JK05F1806">
+                    <button onclick="search('vehicle', 'vehicle')">SEARCH</button>
+                </div>
+                <div class="loading" id="vehicle-loading">🔄 Searching...</div>
+                <div class="success" id="vehicle-success"></div>
+                <div class="error" id="vehicle-error"></div>
+                <div class="result-container">
+                    <div class="result" id="vehicle-result"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-money-bill-wave"></i> UPI INFO
+                </div>
+                <div class="input-group">
+                    <input type="text" id="upi" placeholder="Enter UPI ID" value="fasterversionofme@okicici">
+                    <button onclick="search('upi', 'upi')">SEARCH</button>
+                </div>
+                <div class="loading" id="upi-loading">🔄 Searching...</div>
+                <div class="success" id="upi-success"></div>
+                <div class="error" id="upi-error"></div>
+                <div class="result-container">
+                    <div class="result" id="upi-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>☄️ MAY BE NOW PERMANENT 👀</p>
+            <p class="terminal-text">SECURE CONNECTION | DEVELOPED BY RANJAY YADAV</p>
+        </footer>
+    </div>
+
+    <script>
+        // Matrix Background
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        
+        function initMatrix() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const chars = "01ヤダヴファントムヤダヴPHANTOMヤダヴ";
+            const charArray = chars.split("");
+            const fontSize = 12;
+            const columns = canvas.width / fontSize;
+            const drops = [];
+            
+            for(let i = 0; i < columns; i++) {
+                drops[i] = Math.floor(Math.random() * canvas.height / fontSize);
+            }
+            
+            function drawMatrix() {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = "#00ff41";
+                ctx.font = fontSize + "px monospace";
+                
+                for(let i = 0; i < drops.length; i++) {
+                    const text = charArray[Math.floor(Math.random() * charArray.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    
+                    if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    
+                    drops[i]++;
+                }
+            }
+            
+            setInterval(drawMatrix, 35);
+        }
+
+        // Statistics
+        let stats = {
+            totalSearches: 0,
+            successfulSearches: 0
+        };
+
+        function updateStats() {
+            document.getElementById('total-searches').textContent = stats.totalSearches;
+            document.getElementById('successful-searches').textContent = stats.successfulSearches;
+        }
+
+        // Enhanced duplicate removal
+        function removeDuplicates(data, searchType) {
+            if (searchType === 'vehicle') {
+                return data;
+            }
+            
+            if (data.data && Array.isArray(data.data)) {
+                const uniqueRecords = [];
+                const seen = new Set();
+                
+                data.data.forEach(record => {
+                    // Normalize data for better comparison
+                    const normalizedRecord = {
+                        name: (record.name || '').toLowerCase().trim(),
+                        id: (record.id || '').replace(/\s/g, ''), // Remove spaces from Aadhaar
+                        mobile: (record.mobile || '').trim(),
+                        fname: (record.fname || '').toLowerCase().trim(),
+                        address: (record.address || '').toLowerCase().replace(/!/g, ' ').trim()
+                    };
+                    
+                    // Try multiple combinations to catch duplicates
+                    const keys = [
+                        `${normalizedRecord.name}-${normalizedRecord.id}-${normalizedRecord.mobile}`,
+                        `${normalizedRecord.name}-${normalizedRecord.mobile}`,
+                        `${normalizedRecord.id}-${normalizedRecord.mobile}`,
+                        `${normalizedRecord.name}-${normalizedRecord.fname}-${normalizedRecord.address.substring(0, 30)}`
+                    ];
+                    
+                    let isDuplicate = false;
+                    for (const key of keys) {
+                        if (key.length > 10 && seen.has(key)) {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!isDuplicate) {
+                        // Add all valid keys
+                        keys.forEach(key => {
+                            if (key.length > 10) seen.add(key);
+                        });
+                        uniqueRecords.push(record);
+                    }
+                });
+                
+                const removedCount = data.data.length - uniqueRecords.length;
+                if (removedCount > 0) {
+                    console.log(`✅ Removed ${removedCount} duplicate records`);
+                }
+                
+                return { ...data, data: uniqueRecords };
+            }
+            
+            return data;
+        }
+
+        // Format data in beautiful way with better sequence
+        function formatData(data, searchType) {
+            let html = '';
+            
+            if (searchType === 'vehicle') {
+                if (data.vehicle_response) {
+                    const vehicle = data.vehicle_response;
+                    html += `
+                        <div class="data-record">
+                            <div class="record-number">🚗 VEHICLE INFO</div>
+                            <div class="data-field">
+                                <span class="field-label">Owner:</span>
+                                <span class="field-value">${vehicle.owner_name || 'N/A'}</span>
+                            </div>
+                            <div class="data-field">
+                                <span class="field-label">Number:</span>
+                                <span class="field-value">${vehicle.asset_number || 'N/A'}</span>
+                            </div>
+                            <div class="data-field">
+                                <span class="field-label">Model:</span>
+                                <span class="field-value">${vehicle.make_model || 'N/A'}</span>
+                            </div>
+                            <div class="data-field">
+                                <span class="field-label">Fuel:</span>
+                                <span class="field-value">${vehicle.fuel_type || 'N/A'}</span>
+                            </div>
+                            <div class="data-field">
+                                <span class="field-label">Reg Date:</span>
+                                <span class="field-value">${vehicle.registration_date || 'N/A'}</span>
+                            </div>
+                            <div class="data-field">
+                                <span class="field-label">Address:</span>
+                                <span class="field-value address-field">${vehicle.permanent_address || vehicle.registration_address || 'N/A'}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                return html || '<div class="no-data">No vehicle data</div>';
+            }
+            
+            // For Phone, Aadhaar, UPI data
+            if (data.data && Array.isArray(data.data)) {
+                if (data.data.length === 0) {
+                    return '<div class="no-data">No data found</div>';
+                }
+                
+                // Sort records: records with matching mobile first for phone lookup
+                const sortedRecords = [...data.data].sort((a, b) => {
+                    if (searchType === 'number') {
+                        const searchInput = document.getElementById('phone')?.value.trim() || '';
+                        const aHasMatch = a.mobile === searchInput;
+                        const bHasMatch = b.mobile === searchInput;
+                        
+                        if (aHasMatch && !bHasMatch) return -1;
+                        if (!aHasMatch && bHasMatch) return 1;
+                    }
+                    return 0;
+                });
+                
+                sortedRecords.forEach((record, index) => {
+                    const searchInput = document.getElementById('phone')?.value.trim() || '';
+                    const isExactMatch = record.mobile === searchInput && searchType === 'number';
+                    
+                    html += `
+                        <div class="data-record ${isExactMatch ? 'exact-match' : ''}">
+                            <div class="record-number">
+                                ${isExactMatch ? '🎯 ' : '📄 '}RECORD ${index + 1}
+                                ${isExactMatch ? '<span class="exact-match-badge">(EXACT MATCH)</span>' : ''}
+                            </div>
+                    `;
+                    
+                    // Mobile number FIRST (most important for phone lookup)
+                    if (record.mobile) {
+                        html += `
+                            <div class="data-field">
+                                <span class="field-label">📱 Mobile:</span>
+                                <span class="field-value" style="${isExactMatch ? 'color: #00ff41; font-weight: bold; text-shadow: 0 0 8px #00ff41;' : ''}">${record.mobile}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    // Name
+                    html += `
+                        <div class="data-field">
+                            <span class="field-label">👤 Name:</span>
+                            <span class="field-value">${record.name || 'N/A'}</span>
+                        </div>
+                    `;
+                    
+                    // Father's name
+                    if (record.fname && record.fname !== 'N/A') {
+                        html += `
+                            <div class="data-field">
+                                <span class="field-label">👨‍👦 Father:</span>
+                                <span class="field-value">${record.fname}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    // Aadhaar
+                    if (record.id) {
+                        html += `
+                            <div class="data-field">
+                                <span class="field-label">🆔 Aadhaar:</span>
+                                <span class="field-value">${formatAadhaar(record.id)}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    // Address
+                    html += `
+                        <div class="data-field">
+                            <span class="field-label">🏠 Address:</span>
+                            <span class="field-value address-field">${formatAddress(record.address)}</span>
+                        </div>
+                    `;
+                    
+                    // Circle
+                    if (record.circle && record.circle !== 'N/A') {
+                        html += `
+                            <div class="data-field">
+                                <span class="field-label">📍 Circle:</span>
+                                <span class="field-value">${record.circle}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    // Alternative number
+                    if (record.alt && record.alt !== 'NA' && record.alt !== '9691282274' && record.alt !== 'N/A') {
+                        html += `
+                            <div class="data-field">
+                                <span class="field-label">📞 Alt Number:</span>
+                                <span class="field-value">${record.alt}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    // Email
+                    if (record.email && record.email !== 'N/A') {
+                        html += `
+                            <div class="data-field">
+                                <span class="field-label">📧 Email:</span>
+                                <span class="field-value email-field">${record.email.toLowerCase()}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    html += `</div>`;
+                });
+            } else {
+                html = '<div class="no-data">No data found</div>';
+            }
+            
+            return html;
+        }
+
+        // Format Aadhaar number with spaces for better readability
+        function formatAadhaar(aadhaar) {
+            if (!aadhaar) return 'N/A';
+            const cleanAadhaar = aadhaar.toString().replace(/\s/g, '');
+            if (cleanAadhaar.length === 12) {
+                return `${cleanAadhaar.substring(0, 4)} ${cleanAadhaar.substring(4, 8)} ${cleanAadhaar.substring(8, 12)}`;
+            }
+            return aadhaar;
+        }
+
+        // Format address
+        function formatAddress(address) {
+            if (!address || address === 'NA') return 'N/A';
+            return address.split('!')
+                .filter(part => part.trim() !== '')
+                .map(part => part.trim())
+                .join(', ');
+        }
+
+        async function search(type, element) {
+            const input = document.getElementById(element).value.trim();
+            const resultDiv = document.getElementById(element + '-result');
+            const loadingDiv = document.getElementById(element + '-loading');
+            const successDiv = document.getElementById(element + '-success');
+            const errorDiv = document.getElementById(element + '-error');
+            
+            if (!input) {
+                errorDiv.textContent = 'Enter ' + element + ' number';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Update stats
+            stats.totalSearches++;
+            updateStats();
+
+            // Clear previous results
+            resultDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+            loadingDiv.style.display = 'block';
+
+            try {
+                const response = await fetch(`http://localhost:8000/api/${type}/${encodeURIComponent(input)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                loadingDiv.style.display = 'none';
+                
+                if (data.error) {
+                    errorDiv.textContent = 'API Error: ' + data.error;
+                    errorDiv.style.display = 'block';
+                } else {
+                    // Remove duplicates before displaying
+                    const uniqueData = removeDuplicates(data, type);
+                    
+                    // Format data beautifully
+                    resultDiv.innerHTML = formatData(uniqueData, type);
+                    resultDiv.style.display = 'block';
+                    
+                    // Show success message with duplicate info
+                    const originalCount = data.data ? data.data.length : 0;
+                    const uniqueCount = uniqueData.data ? uniqueData.data.length : 0;
+                    const duplicateCount = originalCount - uniqueCount;
+                    
+                    let successMsg = '✅ REAL DATA RETRIEVED SUCCESSFULLY!';
+                    if (duplicateCount > 0) {
+                        successMsg += ` (${duplicateCount} duplicates removed)`;
+                    }
+                    
+                    successDiv.textContent = successMsg;
+                    successDiv.style.display = 'block';
+                    stats.successfulSearches++;
+                    updateStats();
+                }
+                
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                errorDiv.textContent = 'Connection Error: ' + error.message;
+                errorDiv.style.display = 'block';
+                console.error('Search Error:', error);
+            }
+        }
+
+        // Enter key support
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const id = this.id;
+                    if (id === 'phone') search('number', 'phone');
+                    if (id === 'aadhaar') search('aadhaar', 'aadhaar');
+                    if (id === 'vehicle') search('vehicle', 'vehicle');
+                    if (id === 'upi') search('upi', 'upi');
+                }
+            });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initMatrix();
+            
+            // Handle window resize
+            window.addEventListener('resize', initMatrix);
+        });
+    </script>
+</body>
+</html>
