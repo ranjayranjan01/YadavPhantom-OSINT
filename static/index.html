@@ -846,7 +846,7 @@
             loadingDiv.style.display = 'block';
 
             try {
-                const response = await fetch(`http://localhost:8000/api/${type}/${encodeURIComponent(input)}`);
+                const response = await fetch(`/api/${type}/${encodeURIComponent(input)}`);
                 
                 const data = await response.json();
                 
